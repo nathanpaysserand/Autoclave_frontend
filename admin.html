@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#0f172a;color:white;font-family:Arial;padding:20px">
+
+<h2>Injection Mesures Autoclave</h2>
+
+<input id="temp" placeholder="Température">
+<input id="consigne" placeholder="Consigne">
+<input id="cycle" placeholder="Cycle">
+<input id="status" placeholder="Etat (run/stop/alarm)">
+
+<button onclick="send()">Envoyer</button>
+
+<script>
+function send() {
+    const data = new FormData();
+
+    data.append("temperature", document.getElementById("temp").value);
+    data.append("consigne", document.getElementById("consigne").value);
+    data.append("cycle", document.getElementById("cycle").value);
+    data.append("status", document.getElementById("status").value);
+
+    fetch("insert.php", {
+        method: "POST",
+        body: data
+    });
+}
+</script>
+
+</body>
+</html>

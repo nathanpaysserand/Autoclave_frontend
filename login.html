@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Connexion Dashboard</title>
+<style>
+body { margin:0; font-family: Arial, sans-serif; background:#0f172a; color:white; }
+header { background:#020617; padding:20px; display:flex; justify-content:space-between; align-items:center; }
+header h1 { margin:0; color:#38bdf8; font-size:1.5rem; }
+.login-card { background:#020617; border-radius:10px; padding:30px 40px; max-width:400px; margin:60px auto; box-shadow:0 0 10px rgba(56,221,248,0.3); }
+.login-card h2 { text-align:center; color:#38bdf8; margin-bottom:25px; }
+.login-card input { width:100%; padding:12px 15px; margin-bottom:18px; border:none; border-radius:5px; font-size:1rem; }
+.login-card button { width:200px; padding:14px 0; margin:20px auto 0; display:block; font-size:1.2em; background:#22c55e; border:none; border-radius:5px; color:white; font-weight:bold; cursor:pointer; transition: background 0.3s ease; }
+.login-card button:hover { background:#16a34a; }
+.error-message { color:#ef4444; text-align:center; margin-top:10px; font-weight:bold; display:none; }
+</style>
+</head>
+<body>
+
+<header><h1>Connexion Dashboard</h1></header>
+
+<div class="login-card">
+<h2>Connexion</h2>
+<input type="text" id="username" placeholder="Identifiant" autocomplete="off" />
+<input type="password" id="password" placeholder="Mot de passe" autocomplete="off" />
+<button id="loginBtn">Se connecter</button>
+<p class="error-message" id="errorMsg">Identifiant ou mot de passe incorrect.</p>
+</div>
+
+<script>
+const validUsername = "admin";
+const validPassword = "secret123";
+const loginBtn = document.getElementById('loginBtn');
+const errorMsg = document.getElementById('errorMsg');
+
+loginBtn.addEventListener('click', () => {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if(username === validUsername && password === validPassword) {
+        sessionStorage.setItem("loggedIn", "true");
+        window.location.href = "dashboard.html";
+    } else {
+        errorMsg.style.display = "block";
+    }
+});
+</script>
+</body>
+</html>

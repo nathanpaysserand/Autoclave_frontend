@@ -1,0 +1,36 @@
+/* --- Carte de connexion dans style dashboard --- */
+.login-card {
+    max-width: 350px;
+    margin: 50px auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.login-card input {
+    width: 90%;
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: none;
+}
+
+.login-card button {
+    width: 95%;
+    padding: 10px;
+    margin-top: 10px;
+    background: #22c55e; /* vert style carte run */
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.login-card button:hover {
+    background: #16a34a;
+}
+
+.error {
+    color: #ef4444; /* rouge style carte alarm */
+    margin-top: 10px;
+}

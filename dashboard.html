@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Supervision - D3 & D4</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {margin:0;font-family:Arial;background:#0f172a;color:white;}
+header {background:#020617;padding:20px;display:flex;justify-content:space-between;align-items:center;}
+header h1 {margin:0;color:#38bdf8;}
+.dashboard {display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding:20px;}
+.card {background:#020617;border-radius:10px;padding:20px;border:2px solid #111;}
+.chart-card {grid-column:1/4;height:500px;}
+.run {border-left:6px solid #22c55e;}
+.stop {border-left:6px solid #9ca3af;}
+.off {border-left:6px solid #ef4444;}
+canvas {background:#0f172a;border-radius:5px;}
+.alert {color:#ef4444;font-weight:bold;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Dashboard Supervision</h1>
+    <span>🟢 Données BDD</span>
+</header>
+
+<section class="dashboard" id="dashboard"></section>
+
+<script>
+if(sessionStorage.getItem("loggedIn")!=="true"){
+    alert("Veuillez vous connecter d'abord !");
+    window.location.href="login.html";
+}
+
+let chart;
+let autoclave={status:"run",cycle:"Stérilisation"};
+let conserves={history:[]};
+let reseau={erreur:0,latence:50,volumetrie:120};
+
+// ===== Création dashboard =====
+function createDashboard(){
+    const dash=document.getElementById("dashboard");
+    dash.innerHTML=`
+        <div class="card run" id="cardEtat">
+            <h3>État de l'autoclave</h3>
+            <p id="etat">RUN</p>
+        </div>
+        <div class="card" id="cardCycle">
+            <h3>Cycle actuel</h3>
+            <p id="cycle">---</p>
+        </div>
+        <div class="card" id="cardReseau">
+            <h3>Réseau & erreurs</h3>
+            <p>Erreurs : <span id="erreur">0</span></p>
+            <p>Latence : <span id="latence">0</span> ms</p>
+            <p>Volumétrie : <span id="volumetrie">0</span> MB</p>
+            <p class="alert" id="alertMsg"></p>
+        </div>
+        <div class="card chart-card">
+            <h3>Température des conserves (°C)</h3>
+            <canvas id="chartTemp"></canvas>
+        </div>
+    `;
+    const ctx=document.getElementById("chartTemp").getContext("2d");
+    chart=new Chart(ctx,{
+        type:"line",
+        data:{
+            labels:[],
+            datasets:[{
+                label:"Température",
+                data:[],
+                borderColor:"#38bdf8",
+                backgroundColor:"transparent",
+                fill:false,
+                tension:0.3,
+                pointRadius:5,
+                pointHoverRadius:7,
+                pointBackgroundColor:"#38bdf8"
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            scales:{
+                y:{min:0,max:150,title:{display:true,text:"°C"}}
+            },
+            plugins:{tooltip:{enabled:true}}
+        }
+    });
+}
+
+// ===== Mise à jour dashboard avec anomalies & réseau =====
+function updateDashboard(data){
+    if(!data || data.length===0){
+        document.getElementById("alertMsg").innerText="Erreur réseau ou données manquantes";
+        return;
+    }
+
+    const last10=data.slice(0,10).reverse();
+    conserves.history=last10.map(d=>parseFloat(d.temperature)||0);
+
+    const latest=last10[last10.length-1];
+    autoclave.status=(latest.etat||"unknown").toLowerCase();
+    autoclave.cycle=latest.cycle||"---";
+
+    reseau.erreur=Math.floor(Math.random()*3);
+    reseau.latence=Math.floor(40+Math.random()*20);
+    reseau.volumetrie=Math.floor(100+Math.random()*50);
+
+    // Mise à jour cartes
+    document.getElementById("etat").innerText=autoclave.status.toUpperCase();
+    document.getElementById("cycle").innerText=autoclave.cycle;
+    document.getElementById("erreur").innerText=reseau.erreur;
+    document.getElementById("latence").innerText=reseau.latence;
+    document.getElementById("volumetrie").innerText=reseau.volumetrie;
+    document.getElementById("cardEtat").className=`card ${autoclave.status}`;
+
+    // Couleur dynamique
+    let color="#38bdf8";
+    let alertText="";
+    if(autoclave.status==="off") color="#ef4444";
+    if(autoclave.status==="stop") color="#9ca3af";
+
+    // ✅ D3 – anomalies UI/UX
+    const temp=parseFloat(latest.temperature);
+    if(isNaN(temp) || temp<40 || temp>150) {
+        color="#ef4444";
+        alertText=`Erreur température ${isNaN(temp)?"inconnue":temp+"°C"}`;
+    }
+    if(autoclave.status==="unknown") {
+        color="#ef4444";
+        alertText="Etat incohérent";
+    }
+
+    document.getElementById("alertMsg").innerText=alertText;
+
+    chart.data.datasets[0].borderColor=color;
+    chart.data.datasets[0].pointBackgroundColor=color;
+    chart.data.datasets[0].backgroundColor="transparent";
+    chart.data.labels=conserves.history.map((_,i)=>i+1);
+    chart.data.datasets[0].data=conserves.history;
+    chart.update();
+}
+
+// ===== Fetch simule pertubation réseau (D4) =====
+function fetchData(){
+    // Simulation latence 500ms et erreur réseau 20% du temps
+    setTimeout(()=>{
+        try{
+            if(Math.random()<0.2) throw "Erreur fetch simulée";
+            fetch("get_data.php")
+                .then(res=>res.json())
+                .then(data=>updateDashboard(data))
+                .catch(err=>updateDashboard(null));
+        } catch(e){updateDashboard(null);}
+    },500);
+}
+
+// Init
+createDashboard();
+fetchData();
+setInterval(fetchData,2000);
+</script>
+
+</body>
+</html>
